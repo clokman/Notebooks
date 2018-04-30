@@ -1,9 +1,6 @@
-#  NEO4J/Cypher GLOSSARY OF USAGE SCENARIOS
-This reference sheet is a collection of examples that are representative of various usage scenarios of each listed keyword.
+# GLOSSARY OF USAGE SCENARIOS FOR CYPHER/NEO4J
 
-## USEFUL RESOURCES
-- [Cypher reference card](https://neo4j.com/docs/cypher-refcard/current/)
-- [Cypher manual](https://neo4j.com/docs/developer-manual/current/)
+This reference sheet is a collection of examples that are representative of various usage scenarios of each listed keyword.
 
 ## DATA MODEL
 
@@ -66,15 +63,6 @@ Query operators and special characters:
 | *  | Any | `MATCH p=shortestPath( (john:Person {name:"John Smith"})-[*]-(lincoln:Person {name:"Abraham Lincoln"}) ) RETURN p` |
 | *N  <br> *N1..N2  | Connections from N1th degree to N2th degree | `MATCH (john:Person {name:"John"})-[*1..2]-(n) RETURN DISTINCT john, n` # Return all nodes that are up to 2 hops away from john |
 
-## NEO4J COMMANDS
-
-General
-
-| Command  | Description & links       | Usage examples                    |
-| -------- | ------------------        | --------------------------- |
-| :help    |                           | `:help` <br> `:help create` |
-| :clear   | Clears the output stream  |                             |
-
 ## CLAUSES
 
 | Clause   | Description & links           | Usage examples |
@@ -85,7 +73,7 @@ General
 | SET   | Updates properties and labels. Can also be used to copy variables (only works with maps) | `MATCH (jane { name: 'Jane Smith' }) SET jane:Person:Female`  # set (multiple) labels <br><br> `MATCH (jane { name: 'Jane Smith' }) SET jane.country = 'US', jane.height = 180`  # set properies <br><br> `MATCH (jane { name: 'Jane Smith', age: 28 }) SET jane.age = NULL`  # remove property <br><br> `MATCH (jane { name: 'Jane Smith' }) SET jane += { hungry: FALSE , position: 'Programmer' }`  # '+=' style of adding properties <br><br> `LOAD CSV WITH HEADERS FROM http://data.neo4j.com/northwind/products.csv" AS each_row CREATE (n:Product) SET n = each_row, n.unitPrice = toFloat(each_row.unitPrice), n.discontinued = (row.discontinued <> "0")`  # Copy each_row to n variable, and make transformations. The last n.discontinued = (row.discontinued <> "0") part sets "0" and "1" strings to TRUE and FALSE by first evaluating the contents of the parentheses, and then setting the n.discountinued to the result of this evaluation. |
 | REMOVE    | Removes properties or labels graph elements | `MATCH (jane { name: 'Jane Smith' }) REMOVE jane.age` # remove property <br><br> `MATCH (n { name: 'Jane Smith' }) REMOVE n:Female:Programmer` # remove (multiple) labels |
 | DELETE    | Removes nodes, relationships, or paths from data | `MATCH (n) DETACH DELETE n` # delete all <br> `MATCH ()-[r:ACTED_WITH]->() DELETE r` # delete all instances of a specificic relationship |
-| MATCH    | Specifies a pattern of nodes or relationships | `MATCH (n) RETURN n` # return everything <br> `MATCH (per:Person),(pet:Pet)` <br> `MATCH (:Person)--(:Pet)`  # any relationship  <br> `MATCH (node1:Person)-[relationship1:HAS_PET]->(node2:Pet)` <br> `MATCH (supp:Supplier)-->(prod:Product)-->(cat:Category)` # complex inter-node pattern regardless of relationship type <br> `MATCH (node1:Person)-[:KNOWS]-(node2:Person)` # any direction <br> `MATCH (s)-[{since:2010}]->(o)` |
+| MATCH    | Specifies a pattern of nodes or relationships. | `MATCH (n) RETURN n` # return everything <br> `MATCH (per:Person),(pet:Pet)` # all persons and pets <br> `MATCH (:Person)--(:Pet)`  # any relationship  <br> `MATCH (node1:Person)-[relationship1:HAS_PET]->(node2:Pet)` <br> `MATCH (supp:Supplier)-->(prod:Product)-->(cat:Category)` # complex inter-node pattern regardless of relationship type <br> `MATCH (node1:Person)-[:KNOWS]-(node2:Person)` # any direction <br> `MATCH (s)-[{since:2010}]->(o)` <br><br> # Intersection:<br> `MATCH (per:Person)--(golret:Pet), (golret:Pet)--(type:Type {"Golden Retriever"})` # all persons who has a pet whose type is 'Golden Retriever'. Note that this query does not select persons who has a pet AND pets whose type is 'Golden Retriever'; rather, due to sharing of the 'golret' variable between two parts of the query, 'it selects all persons who has a pet and also requires this pet's type to be a 'Golden Retriever' (i.e., going down in scope).  #|
 | OPTIONAL MATCH    | Specify the patterns to search for in the database while using nulls for missing parts of the pattern. | `MATCH (mr:Movie { title: 'Moulin Rouge' }) OPTIONAL MATCH (mr)-->(x) RETURN x, x.name` <br><br> `OPTIONAL MATCH (jane)-[r:KNOWS]->()` |
 | WHERE    | Constrains/filters the results. Conceptually similar to and 'if' statement. | `MATCH (n) WHERE n:Dutch RETURN n.name` # filter on label <br><br> `WHERE person.name = "John" AND person.from = "Netherlands"` # filter on property <br> `WHERE NOT (persons)-->(jane)` # filter on relationship <br> `WHERE (n)-[:KNOWS]-({ name: 'Jane' })` # filter on relationship and property <br><br> `MATCH (john { name: 'John' }), (targets) WHERE targets.name IN ['Jane', 'Bob'] AND (john)<--(targets) RETURN targets.name,targets.age` # complex filtering <br><br> WHERE keyword can be omitted from many queries: <br> # This query...: <br> `MATCH (person1:John)-->(person2) WHERE person2.from = "US"` <br> # ...can also be written as: <br> `MATCH (person1:John)-->(person2 {from: "US"})` <br><br> But WHERE keyword is still needed for creating complex constraints: <br> `MATCH (eightiesMovie:Movie) WHERE eightiesMovie.released >= 1980 AND eightiesMovie.released <= 1990 RETURN eightiesMovie.title` |
 | RETURN <br><br> [DISTINCT] [AS]  | Requests particular results | `RETURN person.name, person.from, type(person)` <br> `RETURN labels(n) AS labels` # return all labels of  a node <br> `RETURN DISTINCT persons` |
@@ -112,7 +100,21 @@ General
 | shortestPath()    | Outputs shortest path between nodes | `MATCH p=shortestPath( (john:Person {name:"John Smith"})-[*]-(lincoln:Person {name:"Abraham Lincoln"}) ) RETURN p` |
 | count()    | Counts number of occurrences | `MATCH (jane { name: 'Jane' })--(otherPerson)-->() WITH otherPerson, count(*) AS foaf WHERE foaf > 1 RETURN otherPerson.name` |
 
+## NEO4J COMMANDS
+
+General
+
+| Command  | Description & links       | Usage examples                    |
+| -------- | ------------------        | --------------------------- |
+| :help    |                           | `:help` <br> `:help create` |
+| :clear   | Clears the output stream  |                             |
+
 # NOTES
+
+## USEFUL RESOURCES
+
+- [Cypher reference card](https://neo4j.com/docs/cypher-refcard/current/)
+- [Cypher manual](https://neo4j.com/docs/developer-manual/current/)
 
 ## INDEXING
 In Neoj, nodes and relationships are indexed automatically, but not properties. Properties must be indexed manually by using INDEX keyword. Index should be kept as small as possible for performance concerns.
@@ -121,19 +123,6 @@ The properties that are indexed often are identifiers for each dataset imported 
 
 # PROCEDURES AND SCENARIOS
 
-## INTERESTING EXAMPLE QUERIES
-
-Extended social network of a user:
-
-    MATCH (user)-[:KNOWS]-(friend)-[:KNOWS]-(friendOfAFriend)
-
-	# 'friend' can also be just ignored
-    MATCH (user)-[:KNOWS]-()-[:KNOWS]-(friendOfAFriend) 
-
-Users who bought this also bought:
-
-	MATCH (user)-[:PURCHASED]->(product)<-[:PURCHASED]-()-[:PURCHASED]->(otherProduct)
-
 ## DATA IMPORT
 
 Useful resources:
@@ -141,7 +130,7 @@ Useful resources:
 - [Neo4J importing guide](https://neo4j.com/developer/guide-importing-data-and-etl/)
 - [Importing data via CSV](https://neo4j.com/blog/importing-data-neo4j-via-csv/)
 
-## Link two imported datasets by a shared ID column
+### Link two imported datasets by a shared ID column
 
 CategoryID exists in both category and product nodes. Pair nodes in each group based on this:
 
@@ -149,12 +138,25 @@ CategoryID exists in both category and product nodes. Pair nodes in each group b
     WHERE part.functionID = functionCategory.functionID
     CREATE (part)-[:HAS_FUNCTION]->(functionCategory)
 
-## Use a join dataset to create relationships
+### Use a join dataset to create relationships
 
 (...and add relationship properties)
 
     LOAD CSV WITH HEADERS FROM "http://data.example.com/shipment-details.csv" AS eachRow
     MATCH (item:Item), (shi:Shipment)
     WHERE item.itemID = eachRow.itemID AND shi.shipmentID = eachRow.shipmentID // match ids
-    CREATE (shi)-[shipmentDetails:CONTAINS]->(item)  // add csv cells as relationship properties 
+    CREATE (shi)-[shipmentDetails:CONTAINS]->(item)  // add csv cells as relationship properties
     SET shipmentDetails = eachRow
+
+## INTERESTING EXAMPLE QUERIES
+
+Extended social network of a user:
+
+    MATCH (user)-[:KNOWS]-(friend)-[:KNOWS]-(friendOfAFriend)
+
+    # 'friend' can also be just ignored
+    MATCH (user)-[:KNOWS]-()-[:KNOWS]-(friendOfAFriend) 
+
+Users who bought this also bought:
+
+    MATCH (user)-[:PURCHASED]->(product)<-[:PURCHASED]-()-[:PURCHASED]->(otherProduct)
