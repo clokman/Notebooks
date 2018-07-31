@@ -68,7 +68,7 @@ Query operators and special characters:
 
 | Clause   | Description & links           | Usage examples |
 | -------- | ------------------ | -------- |
-| CREATE   | Creates data | `CREATE (node1:Person {name: "John", from: "Netherlands"}),` <br> `(node2:Person {name: "Jane", pet: "Cat"}),` <br> `(node1)-[:KNOWS {since: 2001}]->(node2)` <br><br> `CREATE (swbook:Book { title: 'A Semantic Web Primer',                    authors: ['Antoniou, G', 'Harmelen, F'] })`|
+| CREATE   | Creates data | `CREATE (n:Person:Human)` # Create node with multiple labels <br> `CREATE (node1:Person {name: "John", from: "Netherlands"}),` <br> `(node2:Person {name: "Jane", pet: "Cat"}),` <br> `(node1)-[:KNOWS {since: 2001}]->(node2)` <br><br> `CREATE (swbook:Book { title: 'A Semantic Web Primer',                    authors: ['Antoniou, G', 'Harmelen, F'] })`|
 | MERGE   | Creates data where absent, merges with existing data in case of already existing entities | `MERGE (jane:Person {name:"Jane"})` <br><br> `FOREACH (namesList in ["John","Bob"] | MERGE (jane)-[:KNOWS]->(:Person {name:namesList}))` <br><br> `LOAD CSV WITH HEADERS FROM "file:///directory/file.csv" AS each_row MERGE (u:Person { name: each_row.name, email: each_row.email });` # direct enrichment from file |
 | LOAD   | Retrieves and parses data from a specified source. All fields are parsed as string. | `LOAD CSV WITH HEADERS FROM "file:///example.csv" AS eachRow ...` # local load (in the community edition, the fil must be in Neo4j's import folder.) <br><br> `LOAD CSV WITH HEADERS FROM  http://data.neo4j.com/northwind/products.csv" AS each_row CREATE (n) SET n = each_row RETURN n` # simple online load <br><br> `LOAD CSV WITH HEADERS FROM http://data.neo4j.com/northwind/products.csv" AS each_row CREATE (n:Product) SET n = each_row, n.unitPrice = toFloat(each_row.unitPrice)` # complex load <br><br> `LOAD CSV WITH HEADERS FROM "file:///directory/file.csv" AS each_row FIELDTERMINATOR ';' MERGE (u:Person { name: each_row.name, email: each_row.email });` # direct enrichment from file using custom delimiter <br><br> `LOAD CSV FROM  "http://data.neo4j.com/examples/person.csv" AS eachLine MERGE (n:Person {id: toInteger  eachLine[0])}) SET n.name = eachLine[1] RETURN n` # Use header index position in the file to assign properties (instead of using headers) |
 | SET   | Updates properties and labels. Can also be used to copy variables (only works with maps) | `MATCH (jane { name: 'Jane Smith' }) SET jane:Person:Female`  # set (multiple) labels <br><br> `MATCH (jane { name: 'Jane Smith' }) SET jane.country = 'US', jane.height = 180`  # set properies <br><br> `MATCH (jane { name: 'Jane Smith', age: 28 }) SET jane.age = NULL`  # remove property <br><br> `MATCH (jane { name: 'Jane Smith' }) SET jane += { hungry: FALSE , position: 'Programmer' }`  # '+=' style of adding properties <br><br> `LOAD CSV WITH HEADERS FROM http://data.neo4j.com/northwind/products.csv" AS each_row CREATE (n:Product) SET n = each_row, n.unitPrice = toFloat(each_row.unitPrice), n.discontinued = (row.discontinued <> "0")`  # Copy each_row to n variable, and make transformations. The last n.discontinued = (row.discontinued <> "0") part sets "0" and "1" strings to TRUE and FALSE by first evaluating the contents of the parentheses, and then setting the n.discountinued to the result of this evaluation. |
@@ -149,6 +149,38 @@ CategoryID exists in both category and product nodes. Pair nodes in each group b
     CREATE (shi)-[shipmentDetails:CONTAINS]->(item)  // add csv cells as relationship properties
     SET shipmentDetails = eachRow
 
+## LARGE QUERIES
+
+Very large queries should be run in batches, in an iterative manner. This can be accomplished using APOC plugin's `apoc.periodic.iterate` method. This method works as follows:
+    
+    CALL apoc.periodoc.iterate(
+        "<A query that RETURNs something>", 
+        "A query that takes the returned result as input, and operates on this input by iterating each of its items", 
+        {batchSize: 1000}
+    )
+
+### Delete a large number of nodes in batches
+
+                    
+
+
+### Perform a large operation in batches
+   
+    CALL apoc.periodic.iterate(
+        "MATCH (author:Author)-[:HAS_INSTANCE]->(authorInstance:AuthorInstance)-[:IS_AUTHOR_OF]->(article:Article)-[:HAS_ANNOTATION |:HAS_KEYWORD_PLUS |:HAS_AUTHOR_KEYWORD |:HAS_SUBJECT_CATEGORY]->(topic) RETURN author, topic",
+        "MERGE (author)-[:HAS_RESEARCHED]->(topic)", {batchSize:1000, parallel:false}
+    ) 
+
+
+## NEGATIVE RELATIONSHIPS
+
+Return articles that do not have annotations        :
+
+    MATCH (article:Article) 
+    WHERE NOT (article:Article)-[:HAS_ANNOTATION]-(:Annotation)
+    RETURN article
+    LIMIT 10
+    
 
 ## INTERESTING EXAMPLE QUERIES
 
